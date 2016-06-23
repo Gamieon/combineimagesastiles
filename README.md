@@ -12,4 +12,5 @@ Requirements:
 Usage: combineimagesastiles filemask outputfile
 
 Example 1: combineimagesastiles *.png output.png
+
 Example 2: combineimagesastiles ""d:\tiles\grass*.png"" ""d:\tiles\cmb\grass.png""
