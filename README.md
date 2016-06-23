@@ -3,7 +3,7 @@ combineimagesastiles is a Windows C# console application that combines multiple 
 For a visual description, go to http://gamieon.com/combineimagesastiles/example.png
 
 
-Download Link: http://gamieon.com/combineimagesastiles/combineimagesastiles.exe
+Download Link: http://gamieon.com/combineimagesastiles/combineimagesastiles.zip
 
 
 Requirements:
