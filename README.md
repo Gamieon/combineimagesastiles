@@ -11,6 +11,11 @@ Requirements:
 
 Usage: combineimagesastiles filemask outputfile
 
+    Options:
+
+		-buildcardinals     Renders four versions of each tile rotated 90 degrees apart
+
+		
 Example 1: combineimagesastiles *.png output.png
 
-Example 2: combineimagesastiles ""d:\tiles\grass*.png"" ""d:\tiles\cmb\grass.png""
+Example 2: combineimagesastiles "d:\tiles\grass*.png" "d:\tiles\cmb\grass.png"

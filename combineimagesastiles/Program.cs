@@ -37,52 +37,36 @@ namespace combineimagesastiles
         /// <summary>
         /// Generates a single image made up of a number of collection images arranged as tiles
         /// </summary>
-        /// <param name="searchPattern">The search string to match against the names of files in the current path</param>
-        /// <param name="outFile">The filename of the generated single image</param>
-        static void CombineImagesAsTiles(string searchPattern, string outFile)
+        /// <param name="parameters">The object containing bitmaps and other values that define how the generation will take place</param>
+        static void CombineImagesAsTiles(CombineParameters parameters)
         {
-            // Gather a list of all the image files to read in
-            string searchPath = Path.GetDirectoryName(searchPattern);
-            searchPattern = Path.GetFileName(searchPattern);
-            string[] tileFilenames = Directory.GetFiles(searchPath, searchPattern);
-
-            // We currently operate under the assumption that every gathered file is a valid
-            // image that can be interpreted by a Bitmap object. In an effort to make the resulting
-            // image not be width or height heavy, we calculate that the number of tiles per side to
-            // be the square root of the gathered file count
-            int tilesPerSide = (int)Math.Ceiling(Math.Sqrt((float)tileFilenames.Length));
-            
-            // Load the content of each file into memory
-            List<Bitmap> tiles = new List<Bitmap>();
-            foreach (string s in tileFilenames)
-            {
-                tiles.Add(new Bitmap(s));
-            }
-
-            // Calculate the largest width and height of all the images we collected 
-            int tileWidth = 0;
-            int tileHeight = 0;
-            foreach (Bitmap t in tiles)
-            {
-                tileWidth = Math.Max(tileWidth, t.Width);
-                tileHeight = Math.Max(tileHeight, t.Height);
-            }
-
             // Now that we have all the time bitmaps and the dimensions of the output image, we can
             // generate the output image
-            using (Bitmap target = new Bitmap(tileWidth * tilesPerSide, tileHeight * tilesPerSide))
+            using (Bitmap output = new Bitmap(parameters.tileWidth * parameters.tilesPerRow, parameters.tileHeight * parameters.tilesPerColumn))
             {
-                for (int i = 0; i < tiles.Count; i++)
+                using (Graphics g = Graphics.FromImage(output))
                 {
-                    int x = (i % tilesPerSide) * tileWidth;
-                    int y = (i / tilesPerSide) * tileHeight;
-
-                    using (Graphics g = Graphics.FromImage(target))
+                    int renderedTileCount = 0;
+                    foreach (Bitmap tile in parameters.tiles)
                     {
-                        g.DrawImage(tiles[i], new Point(x, y));
+                        int x = (renderedTileCount % parameters.tilesPerRow) * parameters.tileWidth;
+                        int y = (renderedTileCount / parameters.tilesPerRow) * parameters.tileHeight;
+
+                        // Render the base tile
+                        g.DrawImage(tile, parameters.GetTilePosition(renderedTileCount++));
+
+                        // Render a 90, 180 and 270 degree rotated version if necessary
+                        if (parameters.buildCardinals)
+                        {
+                            for (int i = 0; i < 3; i++)
+                            {
+                                tile.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                                g.DrawImage(tile, parameters.GetTilePosition(renderedTileCount++));
+                            }
+                        }
                     }
                 }
-                target.Save(outFile);
+                output.Save(parameters.outputPathName);
             }
         }
 
@@ -99,20 +83,23 @@ namespace combineimagesastiles
                 // 1. File mask (e.g. *.png)
                 // 2. Output file (e.g. output.png)
                 //
-                if (args.Length != 2)
+                if (args.Length < 2)
                 {
                     Console.WriteLine(@"
-Usage: combineimagesastiles filemask outputfile
+Usage: combineimagesastiles filemask outputfile [options]
+    Options:
+        -buildcardinals     Renders four versions of each tile rotated 90 degrees apart
 
 Examples:
     combineimagesastiles *.png output.png
-    combineimagesastiles ""d:\tiles\grass*.png"" ""d:\tiles\cmb\grass.png""
+    combineimagesastiles ""d:\tiles\grass*.png"" ""d:\tiles\cmb\grass.png"" -buildcardinals
 ");
                 }
                 else
                 {
                     // Do the conversion
-                    CombineImagesAsTiles(args[0], args[1]);
+                    CombineParameters parameters = new CombineParameters(args);
+                    CombineImagesAsTiles(parameters);
 
                     // All done
                     Console.WriteLine("Done!");
